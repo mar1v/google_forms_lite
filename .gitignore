@@ -1,0 +1,66 @@
+# dependencies
+
+node_modules
+.pnpm-store
+
+# builds
+
+dist
+build
+coverage
+.next
+out
+
+# logs
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# env
+
+.env
+.env.local
+.env.*.local
+
+# editor
+
+.vscode
+.idea
+.DS_Store
+
+# typescript
+
+*.tsbuildinfo
+
+# vite
+
+vite.config.ts.timestamp*
+
+# cache
+
+.cache
+.parcel-cache
+
+# OS
+
+Thumbs.db
+
+# lockfiles (if you want only root lock)
+
+apps/*/package-lock.json
+packages/*/package-lock.json
+
+# server runtime
+
+apps/server/tmp
+apps/server/uploads
+
+# client runtime
+
+apps/client/.vite
+
+# test output
+
+coverage
