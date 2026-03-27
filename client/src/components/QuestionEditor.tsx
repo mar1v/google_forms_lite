@@ -1,5 +1,5 @@
-import { Question, QuestionType } from "@shared/types";
-import React, { useState } from "react";
+import type { ChangeEvent } from "react";
+import type { Question, QuestionType } from "@shared/types";
 
 interface Props {
   question: Question;
@@ -19,56 +19,52 @@ export default function QuestionEditor({
   onChange,
   onRemove,
 }: Props) {
-  const [local, setLocal] = useState(question);
-
-  function handleTypeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  function handleTypeChange(e: ChangeEvent<HTMLSelectElement>) {
     const type = e.target.value as QuestionType;
-    setLocal({
-      ...local,
-      type,
-      options: type === "TEXT" || type === "DATE" ? [] : local.options || [""],
-    });
+
     onChange({
-      ...local,
+      ...question,
       type,
-      options: type === "TEXT" || type === "DATE" ? [] : local.options || [""],
+      options:
+        type === "TEXT" || type === "DATE"
+          ? []
+          : question.options?.length
+            ? question.options
+            : [""],
     });
   }
 
-  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setLocal({ ...local, title: e.target.value });
-    onChange({ ...local, title: e.target.value });
+  function handleTitleChange(e: ChangeEvent<HTMLInputElement>) {
+    onChange({ ...question, title: e.target.value });
   }
 
   function handleOptionChange(idx: number, value: string) {
-    const options = [...(local.options || [])];
+    const options = [...(question.options || [])];
     options[idx] = value;
-    setLocal({ ...local, options });
-    onChange({ ...local, options });
+    onChange({ ...question, options });
   }
 
   function addOption() {
-    const options = [...(local.options || []), ""];
-    setLocal({ ...local, options });
-    onChange({ ...local, options });
+    onChange({ ...question, options: [...(question.options || []), ""] });
   }
 
   function removeOption(idx: number) {
-    const options = (local.options || []).filter((_, i) => i !== idx);
-    setLocal({ ...local, options });
-    onChange({ ...local, options });
+    onChange({
+      ...question,
+      options: (question.options || []).filter((_, i) => i !== idx),
+    });
   }
 
   return (
     <div className="border p-2 mb-2 rounded">
       <input
         className="border px-2 py-1 mr-2"
-        value={local.title}
+        value={question.title}
         onChange={handleTitleChange}
         placeholder="Question title"
       />
       <select
-        value={local.type}
+        value={question.type}
         onChange={handleTypeChange}
         className="border px-2 py-1 mr-2"
       >
@@ -78,12 +74,17 @@ export default function QuestionEditor({
           </option>
         ))}
       </select>
-      <button onClick={onRemove} className="btn btn-sm bg-red-500 text-white">
+      <button
+        type="button"
+        onClick={onRemove}
+        className="btn btn-sm bg-red-500 text-white"
+      >
         Remove
       </button>
-      {(local.type === "MULTIPLE_CHOICE" || local.type === "CHECKBOX") && (
+      {(question.type === "MULTIPLE_CHOICE" ||
+        question.type === "CHECKBOX") && (
         <div className="mt-2">
-          {(local.options || []).map((opt, idx) => (
+          {(question.options || []).map((opt, idx) => (
             <div key={idx} className="flex items-center mb-1">
               <input
                 className="border px-2 py-1 mr-2"
@@ -92,6 +93,7 @@ export default function QuestionEditor({
                 placeholder={`Option ${idx + 1}`}
               />
               <button
+                type="button"
                 onClick={() => removeOption(idx)}
                 className="btn btn-sm bg-red-400 text-white"
               >
@@ -100,6 +102,7 @@ export default function QuestionEditor({
             </div>
           ))}
           <button
+            type="button"
             onClick={addOption}
             className="btn btn-sm bg-green-500 text-white"
           >

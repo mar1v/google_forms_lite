@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import type { Question } from "@shared/types";
 
 type QuestionDraft = Question;
@@ -29,11 +30,18 @@ const formBuilderSlice = createSlice({
       state.questions.push(action.payload);
     },
     updateQuestion(state, action: PayloadAction<QuestionDraft>) {
-      const idx = state.questions.findIndex((q) => q.id === action.payload.id);
-      if (idx !== -1) state.questions[idx] = action.payload;
+      const index = state.questions.findIndex(
+        (question) => question.id === action.payload.id,
+      );
+
+      if (index !== -1) {
+        state.questions[index] = action.payload;
+      }
     },
     removeQuestion(state, action: PayloadAction<string>) {
-      state.questions = state.questions.filter((q) => q.id !== action.payload);
+      state.questions = state.questions.filter(
+        (question) => question.id !== action.payload,
+      );
     },
     resetForm(state) {
       state.title = "";

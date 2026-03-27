@@ -1,4 +1,4 @@
-import { Question } from "@shared/types";
+import type { Question } from "@shared/types";
 
 interface Props {
   question: Question;
@@ -29,15 +29,15 @@ export default function QuestionRenderer({ question, value, onChange }: Props) {
     case "MULTIPLE_CHOICE":
       return (
         <div>
-          {(question.options || []).map((opt, idx) => (
-            <label key={idx} className="block">
+          {(question.options || []).map((option, index) => (
+            <label key={index} className="block">
               <input
                 type="radio"
                 name={question.id}
-                checked={value?.[0] === opt}
-                onChange={() => onChange([opt])}
+                checked={value?.[0] === option}
+                onChange={() => onChange([option])}
               />
-              {opt}
+              {option}
             </label>
           ))}
         </div>
@@ -45,17 +45,21 @@ export default function QuestionRenderer({ question, value, onChange }: Props) {
     case "CHECKBOX":
       return (
         <div>
-          {(question.options || []).map((opt, idx) => (
-            <label key={idx} className="block">
+          {(question.options || []).map((option, index) => (
+            <label key={index} className="block">
               <input
                 type="checkbox"
-                checked={value?.includes(opt)}
+                checked={value?.includes(option)}
                 onChange={(e) => {
-                  if (e.target.checked) onChange([...(value || []), opt]);
-                  else onChange((value || []).filter((v) => v !== opt));
+                  if (e.target.checked) {
+                    onChange([...(value || []), option]);
+                    return;
+                  }
+
+                  onChange((value || []).filter((current) => current !== option));
                 }}
               />
-              {opt}
+              {option}
             </label>
           ))}
         </div>

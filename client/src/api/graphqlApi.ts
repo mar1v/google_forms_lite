@@ -1,3 +1,4 @@
+import type { BaseQueryFn, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { Answer, Form, QuestionType, ResponseEntity } from "@shared/types";
 
@@ -19,24 +20,34 @@ export interface SubmitResponseVariables {
 }
 
 interface GqlResponse<T> {
-  data: T;
+  data?: T;
+  errors?: { message: string }[];
 }
 
 interface FormsData {
   forms: Form[];
 }
+
 interface FormData {
   form: Form | null;
 }
+
 interface CreateFormData {
   createForm: Form;
 }
+
 interface SubmitResponseData {
   submitResponse: ResponseEntity;
 }
+
 interface ResponsesData {
   responses: ResponseEntity[];
 }
+
+type GraphqlError = {
+  status: "GRAPHQL_ERROR";
+  data: string;
+};
 
 const gql = {
   forms: `
@@ -89,68 +100,75 @@ const gql = {
   `,
 } as const;
 
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:4000",
+  prepareHeaders: (headers) => {
+    headers.set("Content-Type", "application/json");
+    return headers;
+  },
+});
+
+const graphqlBaseQuery: BaseQueryFn<
+  { query: string; variables?: unknown },
+  unknown,
+  FetchBaseQueryError | GraphqlError
+> = async ({ query, variables }, api, extraOptions) => {
+  const result = await rawBaseQuery(
+    {
+      url: "/graphql",
+      method: "POST",
+      body: { query, variables },
+    },
+    api,
+    extraOptions,
+  );
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  const response = result.data as GqlResponse<unknown>;
+
+  if (response.errors?.length) {
+    return {
+      error: {
+        status: "GRAPHQL_ERROR",
+        data: response.errors.map((error) => error.message).join(", "),
+      },
+    };
+  }
+
+  return { data: response.data };
+};
+
 export const graphqlApi = createApi({
   reducerPath: "graphqlApi",
-
-  baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:4000",
-    prepareHeaders: (headers) => {
-      headers.set("Content-Type", "application/json");
-      return headers;
-    },
-  }),
-
+  baseQuery: graphqlBaseQuery,
   tagTypes: ["Forms", "Responses"],
-
   endpoints: (builder) => ({
     getForms: builder.query<Form[], void>({
-      query: () => ({
-        url: "/graphql",
-        method: "POST",
-        body: { query: gql.forms },
-      }),
-      transformResponse: (r: GqlResponse<FormsData>) => r.data.forms,
+      query: () => ({ query: gql.forms }),
+      transformResponse: (data: FormsData) => data.forms,
       providesTags: ["Forms"],
     }),
-
     getForm: builder.query<Form | null, string>({
-      query: (id) => ({
-        url: "/graphql",
-        method: "POST",
-        body: { query: gql.form, variables: { id } },
-      }),
-      transformResponse: (r: GqlResponse<FormData>) => r.data.form,
+      query: (id) => ({ query: gql.form, variables: { id } }),
+      transformResponse: (data: FormData) => data.form,
       providesTags: (_result, _error, id) => [{ type: "Forms", id }],
     }),
-
     createForm: builder.mutation<Form, CreateFormVariables>({
-      query: (variables) => ({
-        url: "/graphql",
-        method: "POST",
-        body: { query: gql.createForm, variables },
-      }),
-      transformResponse: (r: GqlResponse<CreateFormData>) => r.data.createForm,
+      query: (variables) => ({ query: gql.createForm, variables }),
+      transformResponse: (data: CreateFormData) => data.createForm,
       invalidatesTags: ["Forms"],
     }),
-
     submitResponse: builder.mutation<ResponseEntity, SubmitResponseVariables>({
-      query: (variables) => ({
-        url: "/graphql",
-        method: "POST",
-        body: { query: gql.submitResponse, variables },
-      }),
-      transformResponse: (r: GqlResponse<SubmitResponseData>) =>
-        r.data.submitResponse,
+      query: (variables) => ({ query: gql.submitResponse, variables }),
+      transformResponse: (data: SubmitResponseData) => data.submitResponse,
       invalidatesTags: ["Responses"],
     }),
-
     getResponses: builder.query<ResponseEntity[], string>({
-      query: (formId) => ({
-        url: "/graphql",
-        method: "POST",
-        body: { query: gql.responses, variables: { formId } },
-      }),
-      transformResponse: (r: GqlResponse<ResponsesData>) => r.data.responses,
+      query: (formId) => ({ query: gql.responses, variables: { formId } }),
+      transformResponse: (data: ResponsesData) => data.responses,
       providesTags: ["Responses"],
     }),
   }),

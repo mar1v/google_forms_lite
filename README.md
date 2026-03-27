@@ -1,20 +1,17 @@
-# Google Forms Lite Clone — Monorepo
+# Google Forms Lite Clone
 
-Test task project — simplified Google Forms clone with form builder, form filling, and responses viewer.
+Google Forms Lite is a simplified clone of Google Forms built as a monorepo.  
+The project includes a React client for form creation and submission, a GraphQL server for data handling, and shared TypeScript types used across both applications.
 
-## 🏗 Monorepo Structure
+## Project Structure
 
+```text
+client/   React + TypeScript + Redux Toolkit + RTK Query + Vite
+server/   Node.js + Express + Apollo Server + GraphQL
+shared/   Shared TypeScript domain types
 ```
-apps/
-  client/     → React + TypeScript + Redux Toolkit + RTK Query
-  server/     → Node.js + Express + Apollo GraphQL
-packages/
-  shared/     → shared TypeScript types
-```
 
----
-
-## 🚀 Tech Stack
+## Tech Stack
 
 ### Client
 
@@ -23,7 +20,8 @@ packages/
 - Redux Toolkit
 - RTK Query
 - React Router
-- TailwindCSS
+- Tailwind CSS
+- Vite
 
 ### Server
 
@@ -34,153 +32,141 @@ packages/
 
 ### Shared
 
-- Shared domain types (Form, Question, Response)
+- Shared TypeScript types for forms, questions, and responses
 
----
-
-## ⚙️ Installation
-
-Clone repo:
-
-```bash
-git clone https://github.com/mar1v/google_forms_lite
-cd project
-```
-
-Install all dependencies (root + workspaces):
-
-```bash
-npm install
-```
-
----
-
-## ▶️ Run Project
-
-### Start server
-
-```bash
-cd apps/server
-npm run dev
-```
-
-Server runs at:
-
-```
-http://localhost:4000/graphql
-```
-
-GraphQL sandbox available in browser.
-
----
-
-### Start client
-
-```bash
-cd apps/client
-npm run dev
-```
-
-Client runs at:
-
-```
-http://localhost:5173
-```
-
----
-
-## 📌 Features
+## Features
 
 ### Form Builder
 
-- Create form
-- Add questions
-- Question types:
-  - TEXT
-  - MULTIPLE_CHOICE
-  - CHECKBOX
-  - DATE
-
-- Dynamic options editing
+- Create a new form with title and description
+- Add questions dynamically
+- Supported question types:
+  - `TEXT`
+  - `MULTIPLE_CHOICE`
+  - `CHECKBOX`
+  - `DATE`
+- Add and remove options for multiple choice and checkbox questions
 
 ### Forms List
 
-- View all forms
-- Open form details
+- View all created forms on the home page
+- Open a form for filling
+- Open submitted responses for a form
 
-### Fill Form
+### Form Submission
 
-- Submit answers
-- Supports all question types
+- Fill a form based on its question types
+- Submit answers through GraphQL mutations
+- Display basic success and error feedback
 
 ### Responses Viewer
 
-- View submitted responses
-- Answers mapped to questions
+- View all responses for a selected form
+- Display answers matched to their corresponding questions
 
----
+## Application Routes
 
-## 🧠 Architecture Notes
+### Client Routes
 
-- GraphQL API with Queries + Mutations
-- In-memory data store (no DB required)
-- Shared types imported from `packages/shared`
-- RTK Query used for GraphQL requests
-- Feature-based Redux slices
+- `/` - list of all forms
+- `/forms/new` - form builder page
+- `/forms/:id/fill` - form filling page
+- `/forms/:id/responses` - responses page
 
----
+### GraphQL Endpoint
 
-## 🔌 GraphQL Operations
+- `http://localhost:4000/graphql`
+
+## GraphQL Operations
 
 ### Queries
 
-```
+```graphql
 forms
-form(id)
-responses(formId)
+form(id: ID!)
+responses(formId: ID!)
 ```
 
 ### Mutations
 
-```
-createForm
-submitResponse
-```
-
----
-
-## 🗃 Data Storage
-
-Current implementation uses in-memory store:
-
-```
-server/store/memoryStore.ts
+```graphql
+createForm(title: String!, description: String, questions: [QuestionInput!])
+submitResponse(formId: ID!, answers: [AnswerInput!]!)
 ```
 
-Data resets on server restart.
+## Requirements
 
----
+- Node.js 20+
+- npm 10+
 
-## 🧪 Testing Tips
+## Installation
 
-Use GraphQL sandbox at:
+Install dependencies from the root and both subprojects:
 
+```bash
+npm install
+npm --prefix client install
+npm --prefix server install
 ```
+
+## Running the Project
+
+### Run Both Client and Server
+
+From the root of the repository:
+
+```bash
+npm run dev
+```
+
+### Run Separately
+
+Client:
+
+```bash
+npm run dev:client
+```
+
+Server:
+
+```bash
+npm run dev:server
+```
+
+## Local URLs
+
+Client:
+
+```text
+http://localhost:5173
+```
+
+Server:
+
+```text
 http://localhost:4000/graphql
 ```
 
-Example mutation:
+## Available Scripts
 
-```graphql
-mutation {
-  createForm(title: "Test", questions: [{ title: "Q1", type: TEXT }]) {
-    id
-  }
-}
+Root scripts:
+
+```bash
+npm run dev
+npm run dev:client
+npm run dev:server
+npm run build
+npm run lint
+npm run typecheck:server
 ```
 
----
+## Data Storage
 
-## 📄 License
+The server uses an in-memory store for forms and responses.  
+Data is available while the server is running and resets after restart.
 
-Test project — educational use.
+## Notes
+
+- RTK Query is used for GraphQL requests and caching on the client
+- Shared domain types are stored in `shared/types.ts`
+- No authentication or database is used in this project

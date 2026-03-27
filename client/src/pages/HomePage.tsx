@@ -26,6 +26,11 @@ export default function HomePage() {
           Error loading forms
         </div>
       )}
+      {!isLoading && !error && !forms?.length && (
+        <div className="text-center text-gray-500 text-lg mb-6">
+          No forms yet. Create your first one.
+        </div>
+      )}
       <ul className="space-y-6">
         {forms?.map((form: Form) => (
           <li
